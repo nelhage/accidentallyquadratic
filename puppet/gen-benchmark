@@ -1,0 +1,10 @@
+#!/bin/sh
+
+n="$1"
+
+echo 'node default {'
+echo '  notify { "message 0": }'
+for i in $(seq 1 "$n"); do
+    echo "  notify { 'message $i': require => Notify['message $((i - 1))'] }"
+done
+echo '}'
