@@ -8,7 +8,7 @@ from collections import defaultdict
 import optparse
 
 parser = optparse.OptionParser()
-parser.add_option("--fields",
+parser.add_option("-f", "--fields",
                   dest='fields',
                   default='compile,apply,total',
                   help='which fields to graph')
@@ -20,7 +20,7 @@ options, args = parser.parse_args()
 
 data = defaultdict(list)
 
-with open(sys.argv[1]) as f:
+with open(args[0]) as f:
     for l in f.readlines():
         if not l:
             continue
@@ -52,14 +52,20 @@ for field in options.fields.split(','):
     linear = numpy.poly1d(numpy.polyfit(x, y, 1))
     quadratic = numpy.poly1d(numpy.polyfit(x, y, 2))
 
+    lerr = sum(pow(linear(xx) - yy, 2) for (xx,yy) in zip(x,y))
+    qerr = sum(pow(quadratic(xx) - yy, 2) for (xx,yy) in zip(x,y))
+    print "%s: error linear=%f quadratic=%f" % (field, lerr, qerr)
+
     plt.errorbar(x, y, yerr=err,
                  marker='.',
                  linestyle='none',
                  label=field)
 
     xs = range(xmin, xmax, xmax/100)
-    plt.plot(xs, map(quadratic, xs))
-    plt.plot(xs, map(linear, xs))
+    if lerr < 2 * qerr:
+        plt.plot(xs, map(linear, xs))
+    else:
+        plt.plot(xs, map(quadratic, xs))
 
 plt.legend(loc=2)
 plt.savefig(options.output)
