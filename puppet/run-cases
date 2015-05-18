@@ -5,6 +5,8 @@ case=$1
 count=$2
 shift 2
 
+echo "k,compile,apply,total" > "data/$case"
+
 for i in $(seq 1 $count); do
     echo "# iteration ${i}"
     for i in "$@"; do
@@ -16,6 +18,6 @@ for i in $(seq 1 $count); do
                 | perl -lane '
                     print $1 if /in ([0-9.]+) seconds/;
                     print $1 if /^\s+([0-9.]+) real/'
-        ) | fmt | tee -a data/"$case"
+        ) | fmt | sed 's/ /,/g' | tee -a data/"$case"
     done
 done

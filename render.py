@@ -10,25 +10,25 @@ import optparse
 parser = optparse.OptionParser()
 parser.add_option("-f", "--fields",
                   dest='fields',
-                  default='compile,apply,total',
+                  default='',
                   help='which fields to graph')
 parser.add_option("-o", "--output",
                   dest='output',
-                  default='puppet.png',
+                  default='out.png',
                   help='output filename')
 options, args = parser.parse_args()
 
 data = defaultdict(list)
 
 with open(args[0]) as f:
+    labels = f.readline().strip().split(",")
     for l in f.readlines():
         if not l:
             continue
-        bits = l.split()
+        bits = l.split(",")
         k = int(bits[0])
-        data[k].append(dict(compile=float(bits[1]),
-                            apply=float(bits[2]),
-                            total=float(bits[3])))
+        data[k].append(
+            dict(zip(labels[1:], map(float, bits[1:]))))
 
 x = sorted(data.keys())
 
@@ -36,10 +36,15 @@ xmin = 0
 xmax = int(1.1 * max(x))
 
 plt.xlim([xmin, xmax])
-plt.ylabel('runtime')
+plt.ylabel(label[0])
 plt.xlabel('nodes')
 
-for field in options.fields.split(','):
+if options.fields:
+    fields = options.fields().split(",")
+else:
+    fields = labels[1:]
+
+for field in fields:
     y = []
     err = [[], []]
     for v in x:
