@@ -45,7 +45,7 @@ def exprange(max):
         i *= 10
 
 def main(args):
-    parser = optparse.OptionParser()
+    parser = optparse.OptionParser("usage: %prog [OPTIONS] test")
     parser.add_option('-m', '--max',
                       dest='max',
                       default=1000,
@@ -60,11 +60,10 @@ def main(args):
     options, args = parser.parse_args(args)
 
     if len(args) != 1 or args[0] not in accidentallyquadratic.all_tests:
-        print "usage: %s [OPTIONS] test" % (sys.argv[0],)
         print "Tests:"
         for t in accidentallyquadratic.all_tests:
             print " - %s" % (t)
-        parser.usage()
+        parser.error("You must specify a test to run.")
         return 1
 
     tc = accidentallyquadratic.all_tests[args[1]]()
