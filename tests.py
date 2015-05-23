@@ -7,6 +7,7 @@ import subprocess
 import re
 import logging
 import shutil
+import optparse
 
 class TestCase(object):
     @property
@@ -98,11 +99,30 @@ def generate_depth_n(n):
     return "\n".join(lines)
 
 
-logging.basicConfig(level=logging.INFO)
-tc = PuppetTest('depth-n', generate_depth_n)
-try:
-    with open(os.path.join("out", tc.name + ".csv"), 'w') as fh:
-        results = run_range(tc, exprange(1000), 2)
-        render(results, fh)
-finally:
-    tc.teardown()
+def main(args):
+    parser = optparse.OptionParser()
+    parser.add_option('-m', '--max',
+                      dest='max',
+                      default=1000,
+                      help='max N to test until',
+                      type='int')
+    parser.add_option('-r', '--runs',
+                      dest='runs',
+                      default=3,
+                      help='run each case how many times',
+                      type='int')
+
+    options, args = parser.parse_args(args)
+
+    logging.basicConfig(level=logging.INFO)
+    tc = PuppetTest('depth-n', generate_depth_n)
+    try:
+        with open(os.path.join("out", tc.name + ".csv"), 'w') as fh:
+            results = run_range(tc, exprange(options.max), options.runs)
+            render(results, fh)
+    finally:
+        tc.teardown()
+
+
+if __name__ == '__main__':
+    exit(main(sys.argv))
