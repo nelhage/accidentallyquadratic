@@ -36,7 +36,7 @@ xmin = 0
 xmax = int(1.1 * max(x))
 
 plt.xlim([xmin, xmax])
-plt.ylabel(label[0])
+plt.ylabel(labels[1])
 plt.xlabel('nodes')
 
 if options.fields:
