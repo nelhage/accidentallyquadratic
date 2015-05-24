@@ -3,6 +3,7 @@ import shutil
 import subprocess
 import tempfile
 import re
+import os.path
 
 class TestCase(object):
     @property
@@ -28,7 +29,10 @@ class PuppetTest(object):
 
     def run(self, n):
         env = dict(os.environ)
-        env['BUNDLE_GEMFILE'] = os.path.join(os.environ['HOME'], 'code', 'puppet', 'Gemfile')
+        env['BUNDLE_GEMFILE'] = os.path.join(
+            os.environ.get('PUPPET_ROOT', 
+                           os.path.join(os.environ['HOME'], 'code', 'puppet')), 
+            'Gemfile')
         out = subprocess.check_output(
             ['bundle', 'exec', 'puppet', 'apply', '--color=false', self.manifest],
             env=env)
@@ -59,7 +63,7 @@ def generate_fanout_n(n):
         r'node default {'
     ]
     for i in xrange(1, n):
-        lines.append(r'  object { "%08x": }' % (i, i-1))
+        lines.append(r'  object { "%08x": }' % (i,))
     lines.append(r'}')
     return "\n".join(lines)
 

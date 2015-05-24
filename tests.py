@@ -4,6 +4,7 @@ import sys
 import time
 import logging
 import optparse
+import errno
 
 import accidentallyquadratic
 
@@ -36,13 +37,18 @@ def render(results, fh):
         fh.write(",".join(vals))
         fh.write("\n")
 
-def exprange(max):
+def exps():
     i = 1
-    while i < max:
+    while True:
         yield i
-        yield 2*i
-        yield 5*i
+        yield i*2
+        yield i*5
         i *= 10
+
+def exprange(max):
+    for r in exps():
+        if r > max: break
+        yield r
 
 def main(args):
     parser = optparse.OptionParser("usage: %prog [OPTIONS] test")
@@ -59,7 +65,7 @@ def main(args):
 
     options, args = parser.parse_args(args)
 
-    if len(args) != 1 or args[0] not in accidentallyquadratic.all_tests:
+    if len(args) != 2 or args[1] not in accidentallyquadratic.all_tests:
         print "Tests:"
         for t in accidentallyquadratic.all_tests:
             print " - %s" % (t)
@@ -69,12 +75,14 @@ def main(args):
     tc = accidentallyquadratic.all_tests[args[1]]()
 
     logging.basicConfig(level=logging.INFO)
+    results = run_range(tc, exprange(options.max), options.runs)
     try:
-        with open(os.path.join("out", tc.name + ".csv"), 'w') as fh:
-            results = run_range(tc, exprange(options.max), options.runs)
-            render(results, fh)
-    finally:
-        tc.teardown()
+        os.makedirs('out')
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise
+    with open(os.path.join("out", tc.name + ".csv"), 'w') as fh:
+        render(results, fh)
 
 if __name__ == '__main__':
     exit(main(sys.argv))
