@@ -1,9 +1,0 @@
-#!/bin/sh
-
-n="$1"
-
-echo 'node default {'
-for i in $(seq 1 "$n"); do
-    echo "  notify { 'message $i':  }"
-done
-echo '}'
