@@ -5,6 +5,7 @@ import time
 import logging
 import optparse
 import errno
+import itertools
 
 import accidentallyquadratic
 
@@ -19,18 +20,14 @@ def run_one(tc, n):
     return out
 
 def run_range(tc, ns, count):
-    out = []
     for n in ns:
         for i in xrange(count):
-            out.append(run_one(tc, n))
+            result = run_one(tc, n)
             logging.info("test.run case=%s n=%d i=%d total=%f",
-                         tc.name, n, i, out[-1]['total'])
-    return out
+                         tc.name, n, i, result['total'])
+            yield result
 
-def render(results, fh):
-    fields = results[0].keys()
-    fields.remove('n')
-    fields[:0] = ['n']
+def render(fields, results, fh):
     fh.write(",".join(fields) + "\n")
     for result in results:
         vals = [str(result[f]) for f in fields]
@@ -76,13 +73,17 @@ def main(args):
 
     logging.basicConfig(level=logging.INFO)
     results = run_range(tc, exprange(options.max), options.runs)
+    first = results.next()
+    fields = first.keys()
+    fields.remove('n')
+    fields[:0] = ['n']
     try:
         os.makedirs('out')
     except OSError as e:
         if e.errno != errno.EEXIST:
             raise
     with open(os.path.join("out", tc.name + ".csv"), 'w') as fh:
-        render(results, fh)
+        render(fields, itertools.chain([first], results), fh)
 
 if __name__ == '__main__':
     exit(main(sys.argv))
