@@ -65,10 +65,30 @@ def generate_fanout_n(n):
     lines.append(r'}')
     return "\n".join(lines)
 
+class NodeRequireTest(object):
+    @property
+    def name(self):
+        return "node-require"
+
+    def generate(self, ctx, n):
+        modules = os.path.join(ctx.tmpdir, "node_modules")
+        os.mkdir(modules)
+        for i in range(n):
+            with open(os.path.join(modules, "file%08x.js" % (i,)), 'w') as fh:
+                fh.write("function f() {}\n")
+
+        with open(os.path.join(ctx.tmpdir, "main.js"), 'w') as fh:
+            for i in range(n):
+                fh.write("var f%08x = require('file%08x')\n" % (i, i))
+
+    def run(self, ctx, n):
+        subprocess.check_call(['node', os.path.join(ctx.tmpdir, "main.js")])
+
 all_tests = dict(
     (t.name, t) for t in
     [
         PuppetTest('fanout-n', generate_fanout_n),
         PuppetTest('depth-n', generate_depth_n),
+        NodeRequireTest(),
     ]
 )
