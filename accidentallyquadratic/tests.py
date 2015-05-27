@@ -107,6 +107,48 @@ class PythonImportTest(object):
     def run(self, ctx, n):
         subprocess.check_call(['python', os.path.join(ctx.tmpdir, "main.py")])
 
+class PythonImportRelativeTest(object):
+    @property
+    def name(self):
+        return "python-import-relative"
+
+    def generate(self, ctx, n):
+        package = os.path.join(ctx.tmpdir, "benchimport")
+        os.mkdir(package)
+
+        for i in range(n):
+            with open(os.path.join(package, "file%08x.py" % (i,)), 'w') as fh:
+                fh.write("def f():\n  pass\n")
+
+        with open(os.path.join(package, "__init__.py"), 'w') as fh:
+            for i in range(n):
+                fh.write("from . import file%08x\n" % (i,))
+
+        with open(os.path.join(ctx.tmpdir, "main.py"), 'w') as fh:
+            fh.write("import benchimport\n")
+
+    def run(self, ctx, n):
+        subprocess.check_call(['python', os.path.join(ctx.tmpdir, "main.py")])
+
+class PythonImportManyTest(object):
+    @property
+    def name(self):
+        return "python-import-many"
+
+    def generate(self, ctx, n):
+        for i in range(n):
+            package = os.path.join(ctx.tmpdir, "bench%08x" % (i,))
+            os.mkdir(package)
+            with open(os.path.join(package, "__init__.py"), 'w') as fh:
+                fh.write("def f():\n  pass\n")
+
+        with open(os.path.join(ctx.tmpdir, "main.py"), 'w') as fh:
+            for i in range(n):
+                fh.write("import bench%08x\n" % (i,))
+
+    def run(self, ctx, n):
+        subprocess.check_call(['python', os.path.join(ctx.tmpdir, "main.py")])
+
 all_tests = dict(
     (t.name, t) for t in
     [
@@ -114,5 +156,7 @@ all_tests = dict(
         PuppetTest('depth-n', generate_depth_n),
         NodeRequireTest(),
         PythonImportTest(),
+        PythonImportRelativeTest(),
+        PythonImportManyTest(),
     ]
 )
