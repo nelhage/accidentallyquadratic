@@ -35,10 +35,6 @@ x = sorted(data.keys())
 xmin = 0
 xmax = int(1.1 * max(x))
 
-plt.xlim([xmin, xmax])
-plt.ylabel(labels[1])
-plt.xlabel('nodes')
-
 if options.fields:
     fields = options.fields().split(",")
 else:
@@ -71,6 +67,12 @@ for field in fields:
         plt.plot(xs, map(linear, xs))
     else:
         plt.plot(xs, map(quadratic, xs))
+
+plt.xlim([xmin, xmax])
+plt.ylabel(labels[1])
+
+plt.ylim(ymin=0)
+plt.xlabel('nodes')
 
 plt.legend(loc=2)
 plt.savefig(options.output)
