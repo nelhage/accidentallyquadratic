@@ -9,20 +9,20 @@ import itertools
 
 import accidentallyquadratic
 
-def run_one(tc, n):
-    tc.generate(n)
+def run_one(ctx, tc, n):
+    tc.generate(ctx, n)
     before = time.time()
-    out = tc.run(n)
+    out = tc.run(ctx, n)
     after = time.time()
     if out is None:
         out = dict()
     out.update(n=n, total=(after-before))
     return out
 
-def run_range(tc, ns, count):
+def run_range(ctx, tc, ns, count):
     for n in ns:
         for i in xrange(count):
-            result = run_one(tc, n)
+            result = run_one(ctx, tc, n)
             logging.info("test.run case=%s n=%d i=%d total=%f",
                          tc.name, n, i, result['total'])
             yield result
@@ -69,21 +69,26 @@ def main(args):
         parser.error("You must specify a test to run.")
         return 1
 
-    tc = accidentallyquadratic.all_tests[args[1]]()
+    tc = accidentallyquadratic.all_tests[args[1]]
 
     logging.basicConfig(level=logging.INFO)
-    results = run_range(tc, exprange(options.max), options.runs)
-    first = results.next()
-    fields = first.keys()
-    fields.remove('n')
-    fields[:0] = ['n']
+    ctx = accidentallyquadratic.Context()
     try:
-        os.makedirs('out')
-    except OSError as e:
-        if e.errno != errno.EEXIST:
-            raise
-    with open(os.path.join("out", tc.name + ".csv"), 'w') as fh:
-        render(fields, itertools.chain([first], results), fh)
+        results = run_range(ctx, tc, exprange(options.max), options.runs)
+
+        first = results.next()
+        fields = first.keys()
+        fields.remove('n')
+        fields[:0] = ['n']
+        try:
+            os.makedirs('out')
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
+        with open(os.path.join("out", tc.name + ".csv"), 'w') as fh:
+            render(fields, itertools.chain([first], results), fh)
+    finally:
+        ctx.teardown()
 
 if __name__ == '__main__':
     exit(main(sys.argv))

@@ -1,7 +1,5 @@
 import atexit
-import shutil
 import subprocess
-import tempfile
 import re
 import os.path
 
@@ -10,31 +8,31 @@ class TestCase(object):
     def name(self):
         pass
 
-    def generate(self, n):
+    def generate(self, ctx, n):
         pass
-    def run(self, n):
+    def run(self, ctx, n):
         pass
 
 class PuppetTest(object):
     def __init__(self, name, generate):
         self.name = 'puppet-' + name
-        self.tmpdir = tempfile.mkdtemp(suffix=name, prefix='aq-puppet-')
-        self.manifest = os.path.join(self.tmpdir, name + ".pp")
         self._generate = generate
-        atexit.register(lambda: shutil.rmtree(self.tmpdir))
 
-    def generate(self, n):
-        with open(self.manifest, 'w') as fh:
+    def manifest(self, ctx):
+        return os.path.join(ctx.tmpdir, self.name + ".pp")
+
+    def generate(self, ctx, n):
+        with open(self.manifest(ctx), 'w') as fh:
             fh.write(self._generate(n))
 
-    def run(self, n):
+    def run(self, ctx, n):
         env = dict(os.environ)
         env['BUNDLE_GEMFILE'] = os.path.join(
-            os.environ.get('PUPPET_ROOT', 
-                           os.path.join(os.environ['HOME'], 'code', 'puppet')), 
+            os.environ.get('PUPPET_ROOT',
+                           os.path.join(os.environ['HOME'], 'code', 'puppet')),
             'Gemfile')
         out = subprocess.check_output(
-            ['bundle', 'exec', 'puppet', 'apply', '--color=false', self.manifest],
+            ['bundle', 'exec', 'puppet', 'apply', '--color=false', self.manifest(ctx)],
             env=env)
 
         matches = re.findall(r'^Notice: ([^\n]+) in ([0-9.]+) seconds$',
@@ -67,7 +65,10 @@ def generate_fanout_n(n):
     lines.append(r'}')
     return "\n".join(lines)
 
-all_tests = {
-    'puppet.fanout-n': lambda: PuppetTest('fanout-n', generate_fanout_n),
-    'puppet.depth-n': lambda: PuppetTest('depth-n', generate_depth_n),
-}
+all_tests = dict(
+    (t.name, t) for t in
+    [
+        PuppetTest('fanout-n', generate_fanout_n),
+        PuppetTest('depth-n', generate_depth_n),
+    ]
+)
