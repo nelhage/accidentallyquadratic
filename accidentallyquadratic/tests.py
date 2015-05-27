@@ -84,11 +84,35 @@ class NodeRequireTest(object):
     def run(self, ctx, n):
         subprocess.check_call(['node', os.path.join(ctx.tmpdir, "main.js")])
 
+class PythonImportTest(object):
+    @property
+    def name(self):
+        return "python-import"
+
+    def generate(self, ctx, n):
+        package = os.path.join(ctx.tmpdir, "benchimport")
+        os.mkdir(package)
+
+        for i in range(n):
+            with open(os.path.join(package, "file%08x.py" % (i,)), 'w') as fh:
+                fh.write("def f():\n  pass\n")
+
+        with open(os.path.join(package, "__init__.py"), 'w') as fh:
+            pass
+
+        with open(os.path.join(ctx.tmpdir, "main.py"), 'w') as fh:
+            for i in range(n):
+                fh.write("from benchimport import file%08x\n" % (i,))
+
+    def run(self, ctx, n):
+        subprocess.check_call(['python', os.path.join(ctx.tmpdir, "main.py")])
+
 all_tests = dict(
     (t.name, t) for t in
     [
         PuppetTest('fanout-n', generate_fanout_n),
         PuppetTest('depth-n', generate_depth_n),
         NodeRequireTest(),
+        PythonImportTest(),
     ]
 )
