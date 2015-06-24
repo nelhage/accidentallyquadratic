@@ -149,6 +149,23 @@ class PythonImportManyTest(object):
     def run(self, ctx, n):
         subprocess.check_call(['python', os.path.join(ctx.tmpdir, "main.py")])
 
+class FileLookupTest(object):
+    @property
+    def name(self):
+        return "lookup-file"
+
+    def generate(self, ctx, n):
+        for i in xrange(n):
+            path = os.path.join(ctx.tmpdir, "file%08x" % (i,))
+            with open(path, 'w') as fh:
+                fh.write("%08x\n" % (i,))
+
+    def run(self, ctx, n):
+        for i in xrange(n):
+            path = os.path.join(ctx.tmpdir, "file%08x" % (i,))
+            with open(path) as fh:
+                fh.read()
+
 all_tests = dict(
     (t.name, t) for t in
     [
@@ -158,5 +175,6 @@ all_tests = dict(
         PythonImportTest(),
         PythonImportRelativeTest(),
         PythonImportManyTest(),
+        FileLookupTest()
     ]
 )
