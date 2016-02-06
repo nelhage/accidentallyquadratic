@@ -170,7 +170,7 @@ class FileLookupTest(object):
 class RubyParserTest(object):
     @property
     def name(self):
-        return "ruby-Parser"
+        return "ruby-parser"
 
     def generate(self, ctx, n):
         with open(os.path.join(ctx.tmpdir, "bench.rb"), 'w') as fh:
@@ -185,6 +185,24 @@ class RubyParserTest(object):
             stdout=open('/dev/null', 'w')
         )
 
+class RubocopTest(object):
+    @property
+    def name(self):
+        return "rubocop"
+
+    def generate(self, ctx, n):
+        with open(os.path.join(ctx.tmpdir, "bench.rb"), 'w') as fh:
+            fh.write("# encoding: utf-8\n")
+            fh.write(u"# ♥\n".encode('utf-8'))
+            for i in xrange(n):
+                fh.write("def f%08x; end\n" % (i,))
+
+    def run(self, ctx, n):
+        subprocess.check_call(
+            ['rubocop', os.path.join(ctx.tmpdir, 'bench.rb')],
+            stdout=open('/dev/null', 'w')
+        )
+
 all_tests = dict(
     (t.name, t) for t in
     [
@@ -196,5 +214,6 @@ all_tests = dict(
         PythonImportManyTest(),
         FileLookupTest(),
         RubyParserTest(),
+        RubocopTest(),
     ]
 )
