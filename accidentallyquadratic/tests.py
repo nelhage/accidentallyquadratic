@@ -1,3 +1,4 @@
+# coding: utf-8
 import atexit
 import subprocess
 import re
@@ -166,6 +167,24 @@ class FileLookupTest(object):
             with open(path) as fh:
                 fh.read()
 
+class RubyParserTest(object):
+    @property
+    def name(self):
+        return "ruby-Parser"
+
+    def generate(self, ctx, n):
+        with open(os.path.join(ctx.tmpdir, "bench.rb"), 'w') as fh:
+            fh.write("# encoding: utf-8\n")
+            fh.write(u"# ♥\n".encode('utf-8'))
+            for i in xrange(n):
+                fh.write("def f%08x; end\n" % (i,))
+
+    def run(self, ctx, n):
+        subprocess.check_call(
+            ['ruby-parse', os.path.join(ctx.tmpdir, 'bench.rb')],
+            stdout=open('/dev/null', 'w')
+        )
+
 all_tests = dict(
     (t.name, t) for t in
     [
@@ -175,6 +194,7 @@ all_tests = dict(
         PythonImportTest(),
         PythonImportRelativeTest(),
         PythonImportManyTest(),
-        FileLookupTest()
+        FileLookupTest(),
+        RubyParserTest(),
     ]
 )
