@@ -3,6 +3,8 @@ import atexit
 import subprocess
 import re
 import os.path
+import time
+import json
 
 class TestCase(object):
     @property
@@ -221,6 +223,40 @@ class RubocopUnicodeTest(object):
             stdout=open('/dev/null', 'w')
         )
 
+class ProcPIDMapsTest(object):
+    @property
+    def name(self):
+        return "proc-pid-maps"
+
+    def generate(self, ctx, n):
+        pass
+
+    def run(self, ctx, n):
+        r,w = os.pipe()
+        pid = os.fork()
+        if pid == 0:
+            import threading
+            os.close(r)
+            fw = os.fdopen(w,'w')
+            def nop():
+                while True: time.sleep(60*60)
+            threads = []
+            for i in xrange(n):
+                threads.append(threading.Thread(target=nop))
+            for th in threads:
+                th.start()
+            start = time.time()
+            open('/proc/self/maps').read()
+            d = {"maps": time.time()-start}
+            fw.write(json.dumps(d))
+            fw.close()
+            os._exit(0)
+        os.close(w)
+        os.waitpid(pid, 0)
+        fr = os.fdopen(r,'r')
+        line = fr.read()
+        return json.loads(line)
+
 all_tests = dict(
     (t.name, t) for t in
     [
@@ -234,5 +270,6 @@ all_tests = dict(
         RubyParserTest(),
         RubocopTest(),
         RubocopUnicodeTest(),
+        ProcPIDMapsTest(),
     ]
 )
