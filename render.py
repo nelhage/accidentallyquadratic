@@ -36,7 +36,7 @@ xmin = 0
 xmax = int(1.1 * max(x))
 
 if options.fields:
-    fields = options.fields().split(",")
+    fields = options.fields.split(",")
 else:
     fields = labels[1:]
 
