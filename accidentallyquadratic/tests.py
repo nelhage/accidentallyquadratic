@@ -5,6 +5,9 @@ import re
 import os.path
 import time
 import json
+import shutil
+
+DATA_DIR = os.path.join(os.path.dirname(__file__), '../data')
 
 class TestCase(object):
     @property
@@ -257,6 +260,25 @@ class ProcPIDMapsTest(object):
         line = fr.read()
         return json.loads(line)
 
+class LeftPadTest(object):
+    @property
+    def name(self):
+        return "left-pad"
+
+    def generate(self, ctx, n):
+        modules = os.path.join(ctx.tmpdir, "node_modules")
+        os.mkdir(modules)
+        shutil.copy(os.path.join(DATA_DIR, 'left-pad.js'),
+                    os.path.join(modules, 'left-pad.js'))
+        with open(os.path.join(ctx.tmpdir, 'main.js'), 'w') as fh:
+            fh.write("var leftpad = require('left-pad')\n")
+            fh.write("for(var i = 0; i < 100; i++) {\n")
+            fh.write("  leftpad('hello', 10+%d, ' ');\n" % (n,))
+            fh.write("}\n")
+
+    def run(self, ctx, n):
+        subprocess.check_call(['node', os.path.join(ctx.tmpdir, "main.js")])
+
 all_tests = dict(
     (t.name, t) for t in
     [
@@ -271,5 +293,6 @@ all_tests = dict(
         RubocopTest(),
         RubocopUnicodeTest(),
         ProcPIDMapsTest(),
+        LeftPadTest(),
     ]
 )

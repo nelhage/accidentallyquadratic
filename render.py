@@ -32,7 +32,7 @@ with open(args[0]) as f:
 
 x = sorted(data.keys())
 
-xmin = 0
+xmin = int(max(0, 0.9*min(x)))
 xmax = int(1.1 * max(x))
 
 if options.fields:

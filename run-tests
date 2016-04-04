@@ -35,21 +35,28 @@ def render(fields, results, fh):
         fh.write(",".join(vals))
         fh.write("\n")
 
-def exps():
-    i = 1
+def exps(i=1):
     while True:
         yield i
         yield i*2
         yield i*5
         i *= 10
 
-def exprange(max):
-    for r in exps():
+def exprange(min, max):
+    for r in exps(min):
         if r > max: break
         yield r
 
+def linrange(min, max, divs):
+    return xrange(min, max, (max-min)/divs)
+
 def main(args):
     parser = optparse.OptionParser("usage: %prog [OPTIONS] test")
+    parser.add_option('--min',
+                      dest='min',
+                      default=1,
+                      help='min N to test',
+                      type='int')
     parser.add_option('-m', '--max',
                       dest='max',
                       default=1000,
@@ -60,6 +67,11 @@ def main(args):
                       default=3,
                       help='run each case how many times',
                       type='int')
+    parser.add_option('-l', '--linear=N',
+                      dest='linear',
+                      default=None,
+                      type='int',
+                      help='run M/N linearly spaced test cases')
 
     options, args = parser.parse_args(args)
 
@@ -76,7 +88,11 @@ def main(args):
         level=logging.INFO,
         format='[%(process)d|%(asctime)s] %(funcName)s %(levelname)s: %(message)s',
     )
-    results = run_range(tc, exprange(options.max), options.runs)
+    if options.linear:
+        ns = linrange(options.min, options.max, options.linear)
+    else:
+        ns = exprange(options.min, options.max)
+    results = run_range(tc, ns, options.runs)
 
     first = results.next()
     fields = first.keys()
