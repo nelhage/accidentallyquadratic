@@ -16,6 +16,10 @@ parser.add_option("-o", "--output",
                   dest='output',
                   default='out.png',
                   help='output filename')
+parser.add_option("--xlabel",
+                  dest='xlabel',
+                  default='nodes',
+                  help='x label')
 options, args = parser.parse_args()
 
 data = defaultdict(list)
@@ -72,7 +76,7 @@ plt.xlim([xmin, xmax])
 plt.ylabel(labels[1])
 
 plt.ylim(ymin=0)
-plt.xlabel('nodes')
+plt.xlabel(options.xlabel)
 
 plt.legend(loc=2)
 plt.savefig(options.output)
