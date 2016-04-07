@@ -20,6 +20,10 @@ parser.add_option("--xlabel",
                   dest='xlabel',
                   default='nodes',
                   help='x label')
+parser.add_option("--ylabel",
+                  dest='ylabel',
+                  default=None,
+                  help='y label')
 options, args = parser.parse_args()
 
 data = defaultdict(list)
@@ -73,7 +77,7 @@ for field in fields:
         plt.plot(xs, map(quadratic, xs))
 
 plt.xlim([xmin, xmax])
-plt.ylabel(labels[1])
+plt.ylabel(options.ylabel or labels[1])
 
 plt.ylim(ymin=0)
 plt.xlabel(options.xlabel)
