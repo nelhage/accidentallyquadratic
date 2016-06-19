@@ -1,6 +1,22 @@
 #!/usr/bin/env ruby
 require 'benchmark'
 
+def string_end_with_semicolon_orig?(str)
+  i = str.size - 1
+  while i >= 0
+    c = str[i]
+    i -= 1
+    if c == "\n" || c == " " || c == "\t"
+      next
+    elsif c != ";"
+      return false
+    else
+      return true
+    end
+  end
+  true
+end
+
 def string_end_with_semicolon_new?(str)
   i = str.size - 1
   while i >= 0
@@ -20,24 +36,26 @@ def string_end_with_semicolon_new?(str)
   true
 end
 
-def string_end_with_semicolon_orig?(str)
-  i = str.size - 1
-  while i >= 0
-    c = str[i]
-    i -= 1
-    if c == "\n" || c == " " || c == "\t"
-      next
-    elsif c != ";"
-      return false
-    else
-      return true
-    end
-  end
-  true
+def string_end_with_semicolon_regex?(str)
+  !!(str =~ /\A[ \n\t]*\z/ || str =~ /;[ \n\t]*\z/)
 end
 
-def string_end_with_semicolon_regex?(str)
-  str =~ /;[ \n\t]*\z/
+def string_end_with_semicolon_byte?(str)
+  i = str.bytesize - 1
+  while i >= 0
+    c = str.getbyte(i)
+    i -= 1
+
+    # 0x0A == "\n"
+    # 0x20 == " "
+    # 0x09 == "\t"
+    # 0x3B == ";"
+    unless c == 0x0A || c == 0x20 || c == 0x09
+      return c === 0x3B
+    end
+  end
+
+  true
 end
 
 LONGKB = 100
@@ -62,7 +80,18 @@ def main
        string_end_with_semicolon_new?(x)
      end},
     {name: "regex", method: ->x{string_end_with_semicolon_regex?(x)}},
+    {name: "byte", method: ->x{string_end_with_semicolon_byte?(x)}},
   ]
+
+  tests.each do |t|
+    answers = methods.map { |m| m[:method].call(t[:value]) }
+    if answers.uniq.length != 1
+      $stderr.puts("methods disagree on #{t[:name]}!")
+      methods.each do |m|
+        $stderr.puts("  #{m[:name]}: #{m[:method].call(t[:value])}")
+      end
+    end
+  end
 
   Benchmark.benchmark(Benchmark::CAPTION, 25) do |bm|
     methods.each do |m|
