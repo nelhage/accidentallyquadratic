@@ -279,6 +279,25 @@ class LeftPadTest(object):
     def run(self, ctx, n):
         subprocess.check_call(['node', os.path.join(ctx.tmpdir, "main.js")])
 
+class RustHashTest(object):
+    @property
+    def name(self):
+        return "rust-hash"
+
+    def generate(self, ctx, n):
+        subprocess.check_call(
+            ['rustc', os.path.join(DATA_DIR, 'rusthash.rs')],
+            cwd=ctx.tmpdir)
+
+    def run(self, ctx, n):
+        line = subprocess.check_output(
+            [os.path.join(ctx.tmpdir, 'rusthash'), str(n)])
+        populate, copy = map(float, line.split(","))
+        return {
+            'populate': populate,
+            'copy': copy,
+        }
+
 all_tests = dict(
     (t.name, t) for t in
     [
@@ -294,5 +313,6 @@ all_tests = dict(
         RubocopUnicodeTest(),
         ProcPIDMapsTest(),
         LeftPadTest(),
+        RustHashTest(),
     ]
 )
