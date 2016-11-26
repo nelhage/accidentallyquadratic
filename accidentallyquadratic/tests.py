@@ -6,6 +6,7 @@ import os.path
 import time
 import json
 import shutil
+import cffi
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), '../data')
 
@@ -298,6 +299,22 @@ class RustHashTest(object):
             'copy': copy,
         }
 
+class CFFIAllocTest(object):
+    ffi = cffi.FFI()
+
+    @property
+    def name(self):
+        return "cffi-alloc"
+
+    def alloc(self, size):
+        self.ffi.new("char[]", size)
+
+    def generate(self, ctx, n):
+        pass
+
+    def run(self, ctx, n):
+        self.alloc(n * 1024)
+
 all_tests = dict(
     (t.name, t) for t in
     [
@@ -314,5 +331,6 @@ all_tests = dict(
         ProcPIDMapsTest(),
         LeftPadTest(),
         RustHashTest(),
+        CFFIAllocTest(),
     ]
 )
